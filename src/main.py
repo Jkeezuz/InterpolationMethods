@@ -17,7 +17,7 @@ def set_lims_and_show(elevation_profile):
 
 
 
-elevation_profile = pd.read_csv("../data/2018_paths/Obiadek.csv")
+elevation_profile = pd.read_csv("../data/2018_paths/WielkiKanionKolorado.csv")
 elevation_profile.columns = ['D', 'W']
 print(elevation_profile.keys())
 print(elevation_profile.head())
