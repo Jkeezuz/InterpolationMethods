@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from src.lagrange import lagrange
-from src.CubicSpline2 import *
 from src.CubicSpline import *
 import seaborn as sns
 
