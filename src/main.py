@@ -1,11 +1,14 @@
 import time
 
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from src.lagrange import lagrange
 from src.CubicSpline import *
 import seaborn as sns
+
+u'''Simple script presenting the results of 
+lagrange vs cubic spline interpolation methods'''
+
 
 
 sns.set()
