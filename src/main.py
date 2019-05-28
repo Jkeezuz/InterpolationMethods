@@ -5,19 +5,20 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from src.interpolation import lagrange
 from src.CubicSpline2 import *
+from src.CubicSpline import *
 import seaborn as sns
 
 
 sns.set()
 
 def set_lims_and_show(elevation_profile):
-    plt.xlim(left=0, right=elevation_profile['D'].max())
-    plt.ylim(bottom=0, top=elevation_profile['W'].max() + 1000)
+    plt.xlim(left=elevation_profile['D'].min() - 1000, right=elevation_profile['D'].max() + 1000)
+    plt.ylim(bottom=elevation_profile['W'].min() - 1000, top=elevation_profile['W'].max() + 1000)
     plt.show()
 
 
 
-elevation_profile = pd.read_csv("../data/2018_paths/WielkiKanionKolorado.csv")
+elevation_profile = pd.read_csv("../data/2018_paths/GlebiaChallengera.csv")
 elevation_profile.columns = ['D', 'W']
 print(elevation_profile.keys())
 print(elevation_profile.head())
@@ -97,12 +98,13 @@ set_lims_and_show(elevation_profile)
 
 
 # SPLINES
-spline = Spline(x_list, y_list)
+#spline = Spline(x_list, y_list)
+spline = CubicSpline(x_list, y_list)
 y_res = np.array([])
 
 start_time = time.time()
 for i in x_res:
-    y_res = np.append(y_res, spline.calc(i))
+    y_res = np.append(y_res, spline.get(i))
 
 elapsed_time = time.time() - start_time
 print(str(elapsed_time) + "s")

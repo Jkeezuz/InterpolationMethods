@@ -1,31 +1,7 @@
 import numpy as np
 
-class SplineFunction:
-    def __init__(self, z, h, x, y):
-        self.z = z
-        self.h = h
-        self.x = x
-        self.y = y
-        self.lenx = len(x)
-
-    def get(self, calcx):
-        first = np.array([(self.z[i]/6*self.h[i+1])*(self.x[i + 1] - calcx)**3
-                          for i in range(self.lenx-2)])
-        sec = np.array([(self.z[i + 1]/6*self.h[i+1])*(calcx - self.x[i])**3
-                        for i in range(self.lenx-2)])
-        th = np.array([(self.y[i+1]/self.h[i+1] - self.z[i+1]*self.h[i+1]/6) * (calcx - self.x[i])
-                       for i in range(self.lenx-2)])
-        frt = np.array([(self.y[i]/self.h[i+1] - self.z[i]*self.h[i+1]/6) * (self.x[i+1] - calcx)
-                        for i in range(self.lenx-2)])
-        res = first + sec + th + frt
-        return np.sum(res)
-
-
 
 class CubicSpline:
-
-    # Implementation based on
-    # https://www.math.uh.edu/~jingqiu/math4364/spline.pdf
 
     def __init__(self, x_values, y_values):
         self.x = np.copy(x_values)
@@ -36,63 +12,72 @@ class CubicSpline:
         self.h = np.diff(x_values)
         # Create the spline
         self.__build_spline()
-        self._func = SplineFunction(self.z, self.h, x_values, y_values)
-
-    def get_spline_function(self):
-        return self._func
 
     def __build_spline(self):
         # Create matrix A
         a = self.__build_mat_a()
-        d = self.__build_mat_d()
-        # Z are the values i of second derivative of Spline in xi
-        self.m = np.linalg.solve(a, d)
+        dres = self.__build_mat_d()
+        # M are the values i of second derivative of Spline in xi
+        self.M = np.linalg.solve(a, dres)
+
+        #Calculate c and d coefficients
+        self.c = np.array([])
+        self.d = np.array([])
+        for i in range(len(self.M)-1):
+            res = (self.y[i+1] - self.y[i])/self.h[i] - (self.h[i]*(self.M[i+1] - self.M[i]))/6
+            self.c = np.append(self.c, res)
+
+            res = (self.x[i+1]*self.y[i] - self.x[i]*self.y[i+1])/self.h[i]\
+                  - (self.h[i]*(self.x[i+1]*self.M[i] - self.x[i]*self.M[i+1])/6)
+            self.d = np.append(self.d, res)
+        print("")
+
 
 
 
     def __build_mat_a(self):
         a = np.zeros([self.lenx, self.lenx])
-        # Fill the A matrix (page 12 in linked paper)
-        a[0][0] = 1.
-        a[0][1] = 0.
-        a[1][0] = self.h[0]/(self.h[0] + self.h[1])
 
-        for i in range(1, self.lenx-1):
-            a[i][i+1] = self.h[i+1]/(self.h[i] + self.h[i+1])
-            a[i+1][i] = self.h[i]/(self.h[i] + self.h[i+1])
+        a[0][0] = 1.
+        for i in range(1, len(self.h)):
+            u = self.h[i-1]/(self.h[i-1] + self.h[i])
+            a[i][i-1] = u
+            a[i][i+1] = 1-u
             a[i][i] = 2
 
-        a[self.lenx - 1][self.lenx-1] = 1
-        a[self.lenx - 1][self.lenx-2] = 0
+        a[-1][-1] = 1
         return a
 
     def __build_mat_d(self):
         d = np.zeros([self.lenx])
-        # Fill the B matrix (page 12 in linked paper)
-        #d[0] =
-        for i in range(1, self.lenx - 1):
-            d[i] = 6*(self.y[i] - self.y[i - 1])/(self.h[i])*(self.h[i]+self.h[i-1])\
-                    - 6*(self.y[i - 1] - self.y[i-2])/(self.h[i-1])*(self.h[i]+self.h[i-1])
-            return d
+
+        for i in range(1, len(self.h)):
+            d[i] = 6*(self.y[i+1] - self.y[i])/((self.h[i])*(self.h[i]+self.h[i-1]))\
+                    - 6*(self.y[i] - self.y[i-1])/((self.h[i-1])*(self.h[i]+self.h[i-1]))
+        d[-1] = 0
+        d[0] = 0
+        return d
 
 
 
-    @staticmethod
-    def p(x, a, b, c, d):
-        return d*x**3 + c*x**2 + b*x + a
+    def _calculate(self, x, i):
+        return self.M[i-1]*((self.x[i] - x)**3)/(6*self.h[i-1]) +\
+               self.M[i]*((x - self.x[i-1])**3)/(6*self.h[i-1]) + \
+               self.c[i-1]*x + self.d[i-1]
 
-    @staticmethod
-    def p_d(x, b, c, d):
-        return (3 * d * x ** 2) + (2 * c * x) + b
-
-    @staticmethod
-    def p_dd(x, c, d):
-        return (6 * d * x) + (2 * c)
-
-    def compute(self, calcx):
-        x1 = np.where(self.x < calcx)[0][-1]
-        x2 = np.where(self.x >= calcx)[0][0]
-        calcy = 0
+    def get(self, calcx):
+        if calcx < int(self.x[0]):
+            return None
+        elif calcx > int(self.x[-1]):
+            return None
+        if calcx not in self.x:
+            idx = np.where(self.x > calcx)[0][0]
+        else:
+            idx = np.where(self.x == calcx)[0] + 1
+        if idx == 21:
+            print()
+        print(str(idx) + " / " + str(calcx))
+        calcy = self._calculate(calcx, idx)
 
         return calcy
 
