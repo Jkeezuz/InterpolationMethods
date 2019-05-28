@@ -74,9 +74,7 @@ class CubicSpline:
             idx = np.where(self.x > calcx)[0][0]
         else:
             idx = np.where(self.x == calcx)[0] + 1
-        if idx == 21:
-            print()
-        print(str(idx) + " / " + str(calcx))
+
         calcy = self._calculate(calcx, idx)
 
         return calcy
