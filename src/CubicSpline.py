@@ -7,7 +7,7 @@ class CubicSpline:
     Based on: http://fourier.eng.hmc.edu/e176/lectures/ch7/node6.html
     All numbers in parentheses correspond to the numbers in parentheses
     on the right hand side of math formulas visible in the linked paper.
-    It allows for easier understanding of code and the corellation between it
+    It allows for easier understanding of code and the correlation between it
      and the math formulas'''
 
 
